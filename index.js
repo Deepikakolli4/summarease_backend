@@ -24,4 +24,4 @@ app.post('/hello', (req, res) => {
 
 app.post('/transcript', getTranscript);
 
-module.exports = app; // ✅ Export the Express app
+module.exports = app; 
