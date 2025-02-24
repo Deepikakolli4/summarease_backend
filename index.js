@@ -15,6 +15,10 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Define routes
+app.get("/", (req, res) => {
+    res.send("Hello, Vercel!");
+});
+
 app.post('/hello', (req, res) => {
     res.send('hello');
 });
