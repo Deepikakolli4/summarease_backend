@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
     res.send("Hello, Vercel!");
 });
 
-app.post('/hello', (req, res) => {
+app.get('/hello', (req, res) => {
     res.send('hello');
 });
 
