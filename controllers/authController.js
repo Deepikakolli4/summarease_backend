@@ -1,65 +1,52 @@
-require('dotenv').config();
-const { YoutubeTranscript } = require('youtube-transcript');
-const API_KEY = process.env.API_KEY;
+const UserService = require("../services/userServices");
 
-const getTranscript = async (req, res) => {
-    console.log("Received request:", req.body);
-    try {
-        const { url, lang = "en" } = req.body;
-
-        if (!url) {
-            return res.status(400).json({ status: 400, message: "URL is required" });
-        }
-
-        console.log("Fetching transcript for:", url);
-        const response = await YoutubeTranscript.fetchTranscript(url);
-
-        if (!response || response.length === 0) {
-            return res.status(404).json({ status: 404, message: "Transcript not found" });
-        }
-
-        const transcriptText = response.map(segment => segment.text).join(" ");
-
-        // Generate summary using Gemini API
-        const summarizedText = await summarizeTranscript(transcriptText, lang);
-
-        return res.status(200).json({ data: summarizedText })
-    } catch (error) {
-        console.error('Error generating summary:', error);
-        res.status(500).json({ error: 'Failed to generate summary' });
+const createUser = async (req, res) => {
+  try {
+    const { username , email, password } = req.body;
+    user = UserService.createUser( username,email, password);
+    if (user) {
+      return res
+        .status(200)
+        .json({ status: 201, message: "Succesfully Created User" });
+    } else {
+      return res
+        .status(400)
+        .json({ status: 400, message: "user alreeady exits" });
     }
-}
-
-// Summarize transcript using Gemini API
-const summarizeTranscript = async (transcriptText, lang) => {
-    try {
-        if (!transcriptText) {
-            throw new Error("Cannot find the transcribed text");
-        }
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `Summarize the following text in **${lang}**:\n\n${transcriptText}` }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-
-        if (!data || !data.candidates || data.candidates.length === 0) {
-            console.error("Gemini API Error:", data);
-            throw new Error("Failed to generate summary");
-        }
-
-        return data.candidates[0].content.parts[0].text.trim();
-
-    } catch (error) {
-        console.error("Error summarizing transcript:", error.message);
-        return "Summary generation failed.";
+  } catch (error) {
+    return res.status(400).json({ status: 400, message: error.message });
+  }
+};
+const getUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+    users = await UserService.getUsers(email);
+    if (users.length === 0) {
+      return res.status(200).json({ status: 200, data: [] });
+    } else {
+      return res.status(200).json({ status: 200, data: users });
     }
+  } catch (error) {
+    return res.status(400).json({ status: 400, message: error.message });
+  }
+};
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await UserService.userLogin(email, password);
+    console.log(user);
+    if (user) {
+      return res.status(200).json({
+        status: 200,
+        access_token: user.access_token,
+        refresh_token: user.refresh_token,
+        username : user.username,
+        message: "user successfully logged in",
+      });
+    }
+  } catch (error) {
+    return res.status(400).json({ status: 400, message: error.message });
+  }
 };
 
-module.exports = { getTranscript, summarizeTranscript };
+module.exports = { createUser, getUser, loginUser };
