@@ -17,9 +17,13 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Define routes
-app.get('/', function(req,res){
-    res.send("Hello world")
-})
+app.get("/", (req, res) => {
+    res.send("Hello, Vercel!");
+});
+
+app.post('/hello', (req, res) => {
+    res.send('hello');
+});
 
 app.post('/transcript', getTranscript);
 app.use('/user',authRouter)
